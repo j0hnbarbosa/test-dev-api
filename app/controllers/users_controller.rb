@@ -1,36 +1,54 @@
 class UsersController < ApplicationController
-  def create
-    user_info = params['data']
-    address_info = user_info['address']
+  before_action :authorize_request, except: :create
+  before_action :find_user, except: %i[create index]
 
-    contact = Contact.new(
-      first_name: user_info['first_name'],
-      last_name: user_info['last_name'],
-      cpf: user_info['cpf'],
-      email: user_info['email'],
-      birth_date: user_info['birth_date'],
-    )
-
-    address = Address.new(
-      cep: address_info['cep'],
-      street: address_info['street'],
-      neighborhood: address_info['neighborhood'],
-      city: address_info['city'],
-      state: address_info['state'],
-      number: address_info['number'],
-      contacts: contact
-    )
-
-
-    address.transaction do
-      
-      address.save
-      
-      # Contact.destroy(2)
-      render json: address
-
+    # GET /users
+    def index
+      @users = User.all
+      render json: @users, status: :ok
     end
-
-  end
   
+    # GET /users/{username}
+    def show
+      render json: @user, status: :ok
+    end
+  
+    # POST /users
+    def create
+      @user = User.new(user_params)
+      # render json: user_params
+      if @user.save
+        render json: @user, status: :created
+      else
+        render json: { errors: @user.errors.full_messages },
+               status: :unprocessable_entity
+      end
+    end
+  
+    # PUT /users/{username}
+    def update
+      unless @user.update(user_params)
+        render json: { errors: @user.errors.full_messages },
+               status: :unprocessable_entity
+      end
+    end
+  
+    # DELETE /users/{username}
+    def destroy
+      @user.destroy
+    end
+  
+    private
+  
+    def find_user
+      @user = User.find_by_username!(params[:_username])
+      rescue ActiveRecord::RecordNotFound
+        render json: { errors: 'User not found' }, status: :not_found
+    end
+  
+    def user_params
+      params.permit(
+        :name, :email, :password, :password_confirmation
+      )
+    end
 end

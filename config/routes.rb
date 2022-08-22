@@ -1,7 +1,13 @@
 Rails.application.routes.draw do
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-  post "register_user", to: "users#create"
 
-  # Defines the root path route ("/")
-  # root "articles#index"
+  post 'register_contact', to: 'contacts#create'
+  post '/auth/login', to: 'authentication#login'
+  post '/users', to: 'users#create'
+
+  get 'contacts', to: 'contacts#get'
+  get 'consult_cep', to: 'cep#get'
+
+  get '/*a', to: 'application#not_found'
+
+
 end
